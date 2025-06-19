@@ -9,8 +9,6 @@ jobs:
     steps:
       - name: Checkout Draco
         uses: actions/checkout@v4
-        with:
-          ref: 1.5.7
 
       - name: Install dependencies
         run: |
