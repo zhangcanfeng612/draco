@@ -1,0 +1,45 @@
+name: Build Draco WASM (Large Memory, 1.5.7, Emscripten 2.0.34)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Draco 1.5.7
+        uses: actions/checkout@v4
+        with:
+          repository: google/draco
+          ref: 1.5.7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake python3
+
+      - name: Setup emsdk 2.0.34
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install 2.0.34
+          ./emsdk activate 2.0.34
+          echo "source $PWD/emsdk_env.sh" >> $GITHUB_ENV
+
+      - name: Build WASM with large memory
+        run: |
+          source emsdk/emsdk_env.sh
+          mkdir build_wasm
+          cd build_wasm
+          # 修改内存参数
+          sed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sINITIAL_MEMORY=536870912")/' ../cmake/draco_emscripten.cmake
+          emcmake cmake .. -DDRACO_JS_GLUE=ON -DDRACO_WASM=ON -DCMAKE_BUILD_TYPE=Release
+          emmake make
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: draco-wasm-large-memory
+          path: |
+            build_wasm/draco_decoder.wasm
+            build_wasm/draco_encoder.wasm
