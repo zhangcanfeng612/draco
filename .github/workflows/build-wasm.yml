@@ -1,4 +1,4 @@
-name: Build Draco WASM (Large Memory, 1.5.7, Emscripten 2.0.34)
+name: Build Draco WASM (memory64, experimental)
 
 on:
   workflow_dispatch:
@@ -15,28 +15,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake python3
 
-      - name: Setup emsdk 2.0.34 and Build WASM with large memory
+      - name: Setup emsdk 3.1.45 and Build WASM with memory64
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
           cd emsdk
-          ./emsdk install 2.0.34
-          ./emsdk activate 2.0.34
+          ./emsdk install 3.1.45
+          ./emsdk activate 3.1.45
           source ./emsdk_env.sh
           cd ..
-          mkdir build_wasm
-          cd build_wasm
+          mkdir build_wasm_memory64
+          cd build_wasm_memory64
           # 自动插入 memory64 参数
           sed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sMEMORY64=1")/' ../cmake/draco_emscripten.cmake
-          # 自动插入大内存参数
-          # sed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sINITIAL_MEMORY=536870912")/' ../cmake/draco_emscripten.cmake
-          # 传递 EMSCRIPTEN 环境变量，确保 cmake 能检测到
+          # 你也可以加大内存参数
+          # ed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sINITIAL_MEMORY=1073741824")/' ../cmake/draco_emscripten.cmake
           env EMSCRIPTEN=$GITHUB_WORKSPACE/emsdk/upstream/emscripten emcmake cmake .. -DDRACO_JS_GLUE=ON -DDRACO_WASM=ON -DCMAKE_BUILD_TYPE=Release
           emmake make
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: draco-wasm-large-memory
+          name: draco-wasm-memory64
           path: |
-            build_wasm/draco_decoder.wasm
-            build_wasm/draco_encoder.wasm
+            build_wasm_memory64/draco_decoder.wasm
+            build_wasm_memory64/draco_encoder.wasm
