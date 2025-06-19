@@ -1,4 +1,4 @@
-name: Build Draco JS (asm.js, no wasm)
+name: Build Draco WASM (memory64 + wasm wrapper)
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake python3
 
-      - name: Setup emsdk 3.1.45 and Build JS (asm.js)
+      - name: Setup emsdk 3.1.45 and Build WASM with memory64 and wrapper
         run: |
           git clone https://github.com/emscripten-core/emsdk.git
           cd emsdk
@@ -23,15 +23,17 @@ jobs:
           ./emsdk activate 3.1.45
           source ./emsdk_env.sh
           cd ..
-          mkdir build_js
-          cd build_js
-          env EMSCRIPTEN=$GITHUB_WORKSPACE/emsdk/upstream/emscripten emcmake cmake .. -DDRACO_JS_GLUE=ON -DDRACO_WASM=OFF -DCMAKE_BUILD_TYPE=Release
+          mkdir build_wasm_memory64
+          cd build_wasm_memory64
+          # 插入 memory64 和大内存参数
+          sed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sMEMORY64=1")\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sINITIAL_MEMORY=1073741824")/' ../cmake/draco_emscripten.cmake
+          env EMSCRIPTEN=$GITHUB_WORKSPACE/emsdk/upstream/emscripten emcmake cmake .. -DDRACO_JS_GLUE=ON -DDRACO_WASM=ON -DCMAKE_BUILD_TYPE=Release
           emmake make
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: draco-js-asm
+          name: draco-wasm-memory64
           path: |
-            build_js/draco_decoder.js
-            build_js/draco_encoder.js
+            build_wasm_memory64/draco_decoder.wasm
+            build_wasm_memory64/draco_wasm_wrapper.js
