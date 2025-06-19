@@ -26,7 +26,7 @@ jobs:
           mkdir build_wasm
           cd build_wasm
           # 自动插入大内存参数
-          sed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sINITIAL_MEMORY=536870912")/' ../cmake/draco_emscripten.cmake
+          # sed -i 's/-sALLOW_MEMORY_GROWTH=1/&\\n    list(APPEND ${em_FLAG_LIST_VAR_COMPILER} "-sINITIAL_MEMORY=536870912")/' ../cmake/draco_emscripten.cmake
           # 传递 EMSCRIPTEN 环境变量，确保 cmake 能检测到
           env EMSCRIPTEN=$GITHUB_WORKSPACE/emsdk/upstream/emscripten emcmake cmake .. -DDRACO_JS_GLUE=ON -DDRACO_WASM=ON -DCMAKE_BUILD_TYPE=Release
           emmake make
