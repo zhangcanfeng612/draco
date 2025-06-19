@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Draco 1.5.7
+      - name: Checkout Draco
         uses: actions/checkout@v4
         with:
           ref: 1.5.7
